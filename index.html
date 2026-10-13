@@ -1,15 +1,15 @@
-
-
-
-
-
-GeoFeature · 全球半岛版 · 可导入（矢量地图 · 缩放自适应轮廓）
-
-
-
-
-
-
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GeoFeature · 全球半岛版 · 可导入（矢量地图 · 缩放自适应轮廓）</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link href="https://cdn.jsdelivr.net/npm/@fontsource-variable/space-grotesk@5.2.10/index.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource-variable/noto-sans-sc@5.2.10/index.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource-variable/jetbrains-mono@5.2.8/index.css" rel="stylesheet">
+<link href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" rel="stylesheet">
+<style>
 :root{
   --bg:#0a0e14; --panel:#131a24; --panel2:#1b2431; --line:#26313f;
   --txt:#e6edf6; --sub:#8b9bb0; --accent:#f0a02c; --ok:#3ddc84; --bad:#ff5c6c;
@@ -120,88 +120,88 @@ body{
 .jumpbtn:hover{filter:brightness(1.06)}
 .catalogue tr.hit td,.ctylist tr.hit td{background:rgba(240,160,44,.18);box-shadow:inset 3px 0 0 #f0a02c}
 .cathint{font-size:11px;color:var(--sub);margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="logo">🌐 Geo<b>Feature</b><small> · 全球半岛版 · 可导入</small></div>
+    <div class="legend" id="legend"></div>
+    <div class="spacer"></div>
+    <div class="statbox"><div><div class="k">要素库</div><div class="v" id="statTotal">0</div></div></div>
+    <div class="statbox"><div><div class="k">轮廓精度</div><div class="v" id="statLevel">L0</div></div><div class="lodbadge"><div class="step"><i id="lodFill"></i></div><span id="statPts">0 点</span></div></div>
+  </div>
 
+  <div class="game">
+    <div class="card mapcard">
+      <div class="mapbar">
+        <button class="btn btn-primary" id="drawBtn">✏️ 框选识别</button>
+        <button class="btn btn-ghost" id="clearBtn">清除</button>
+        <button class="btn btn-ghost" id="globeBtn">🌍 球体投影</button>
+        <button class="btn btn-ghost" id="importBtn">📥 导入数据</button>
+        <input type="file" id="importFile" accept=".geojson,.json,.csv,.txt" multiple style="display:none">
+        <span class="hintline" style="margin:0 0 0 auto">拖动地图平移 · 滚轮缩放查看轮廓精度变化</span>
+      </div>
+      <div class="ctybar">
+        <input id="countryInput" type="text" placeholder="半岛所属国家（中/英），如：俄罗斯 / Russia">
+        <button class="btn btn-ghost" id="countryBtn">按国家筛查</button>
+        <button class="btn btn-ghost" id="countryReset">恢复全球</button>
+      </div>
+      <div class="hintline" id="countryMsg" style="margin-top:6px">小半岛不易匹配时，可先输入所属国家，系统只在该国要素内匹配并列出该国全部半岛。</div>
+      <div class="ctylist" id="countryList"></div>
+      <div class="hintline" id="importMsg" style="margin-top:6px">支持把 <b>.geojson / .csv</b> 文件直接拖到地图，或点「📥 导入数据」选择文件；导入后自动合并进要素库，并保留「共识译名 / 音译名 / 待补译名」标注。</div>
+      <div id="map"></div>
+      <div class="mapnote" id="mapnote">底图为矢量瓦片（OpenFreeMap / MapLibre GL）。要素轮廓随缩放级别自动简化：缩小更轻量，放大更精确。</div>
+    </div>
 
+    <div class="card">
+      <h2>截取识别</h2>
+      <div class="hintline">点击 <code>框选识别</code> 后在地图上拖出一个矩形，系统先按几何形状判型（半岛 / 海峡 / 海湾 / 峡湾 / 岛屿），再与要素库做<b>区域匹配</b>定名（点要素也参与）；小半岛难匹配时可用下方「按国家筛查」。</div>
 
+      <div class="readout">
+        <div class="cell"><b>截取面积</b><span id="mArea">—</span></div>
+        <div class="cell"><b>延伸率</b><span id="mElong">—</span></div>
+        <div class="cell"><b>紧凑度</b><span id="mComp">—</span></div>
+      </div>
 
-  
-    🌐 GeoFeature · 全球半岛版 · 可导入
-    
-    
-    要素库0
-    轮廓精度L00 点
-  
+      <div class="result empty" id="result">尚未截取 · 拖出矩形开始识别</div>
 
-  
-    
-      
-        ✏️ 框选识别
-        清除
-        🌍 球体投影
-        📥 导入数据
-        
-        拖动地图平移 · 滚轮缩放查看轮廓精度变化
-      
-      
-        
-        按国家筛查
-        恢复全球
-      
-      小半岛不易匹配时，可先输入所属国家，系统只在该国要素内匹配并列出该国全部半岛。
-      
-      支持把 .geojson / .csv 文件直接拖到地图，或点「📥 导入数据」选择文件；导入后自动合并进要素库，并保留「共识译名 / 音译名 / 待补译名」标注。
-      
-      底图为矢量瓦片（OpenFreeMap / MapLibre GL）。要素轮廓随缩放级别自动简化：缩小更轻量，放大更精确。
-    
+      <h2>要素图鉴（分类 · 搜索 · 点击定位）</h2>
+      <div class="catbar" id="catbar"></div>
+      <input id="catSearch" class="catsearch" type="text" placeholder="在当前分类内搜索：中文名 / 英文名 / 原名，例如 直布罗陀">
+      <div class="cathint" id="cathint"></div>
+      <div class="catalogue"><table><tbody id="catBody"></tbody></table></div>
 
-    
-      截取识别
-      点击 框选识别 后在地图上拖出一个矩形，系统先按几何形状判型（半岛 / 海峡 / 海湾 / 峡湾 / 岛屿），再与要素库做区域匹配定名（点要素也参与）；小半岛难匹配时可用下方「按国家筛查」。
+      <details class="changelog">
+        <summary>⚡ 改动记录：全球半岛版（导入 GeoNames TPEN 共识名名单）</summary>
+        <ul>
+          <li><b>本次更新（全球半岛版）：</b>在既有要素库基础上，导入从 GeoNames 全球 TPEN 提取的「有中文共识名」半岛名单（133 条）。合入后半岛要素共 <b>1565</b> 条，其中 <b>共识译名 1234</b> / <b>音译名 294</b> / <b>待补译名 37</b>。</li>
+          <li><b>合并规则：</b>按英文名与中文名归一化去重；已存在条目命中共识名后升级为「共识译名」；未收录的共识名条目作为新增点要素导入（含 geonameid 与所属国家）。共升级 66 条、新增 67 条。</li>
+          <li><b>标注说明：</b>每条半岛名称均标注名称性质——<b>共识译名</b>（采用公开通用译名）、<b>音译名</b>（暂无公开共识译名，按原名音译，括号内为原名）、<b>待补译名</b>（暂无中文名）。</li>
+        </ul>
+      </details>
+        <ul>
+          <li><b>本次更新（大半岛优先 + 区域匹配 + 国家筛查 + 中文名）：</b>优先收录楚科奇、堪察加、泰梅尔、亚马尔、科拉、拉布拉多等世界级大半岛；取消“点/绿块铺满”的覆盖式展示，改为<b>按框选区域匹配</b>（点要素亦参与，且不被超大范围要素压制）；新增<b>按国家筛查</b>输入框，小半岛难匹配时先锁定国家再匹配；缺失中文名的要素统一做<b>英译中/规则化直译</b>。</li>
+          <li><b>双数据源架构：</b>新增瓦片模式——配置 <code>TILES_URL</code> 后从矢量瓦片（PMTiles / 静态目录）按视野流式加载，可承载上万~几十万要素；默认仍用内置要素库，但按 <code>rank</code> 重要度分级显隐（低缩放只显示大要素）。配套 <code>features.geojson</code> 导出与 <code>tools/bake_tiles.sh</code> 烘焙管线。</li>
+          <li><b>要素库扩充（22 → 68 项）：</b>半岛 17 / 海峡 14 / 海湾 14 / 峡湾 5 / 岛屿 18，覆盖全球主要地理要素；图例新增各类型数量显示。</li>
+          <li><b>取消运行期几何重算：</b>原先每次缩放/平移结束都用 Turf 对全部要素重新简化并整包 <code>setData</code>；现改为启动时一次性预生成 5 级 LOD 几何，并按级别建独立图层。</li>
+          <li><b>缩放切换交给地图引擎：</b>用每级的 <code>minzoom/maxzoom</code> 自动显隐，缩放/平移不再触发任何数据重建（<code>moveend</code> 仅刷新统计）。</li>
+          <li><b>高亮改用 feature-state：</b>删除独立 highlight 数据源与整包 setData，改为 <code>setFeatureState</code> 状态着色，零数据重传。</li>
+          <li><b>缓解颜色重叠：</b>填充不透明度下调，并在彩色边线下加一层深色描边（casing），相邻/嵌套要素边界更清晰。</li>
+          <li><b>标签防挤占：</b>引入 <code>symbol-sort-key</code>（按面积定优先级）+ <code>text-variable-anchor</code> + <code>text-padding</code>，密集区自动择优显示。</li>
+          <li><b>可观测：</b>启动时记录 LOD 预生成耗时，显示在地图下方注释。</li>
+        </ul>
+      </details>
+      <div class="footnote">
+        <b>说明：</b>本页为功能原型。要素轮廓为<b>示意几何</b>（依据公开地名的中心坐标概化而成，非测绘级精度），用于验证「缩放自适应简化 + 几何识别」链路。真实项目应接入 Natural Earth / OpenStreetMap 的权威矢量数据。地图涉国界处应以官方标准地图为准。
+      </div>
+    </div>
+  </div>
+</div>
 
-      
-        截取面积—
-        延伸率—
-        紧凑度—
-      
-
-      尚未截取 · 拖出矩形开始识别
-
-      要素图鉴（分类 · 搜索 · 点击定位）
-      
-      
-      
-      
-
-      
-        ⚡ 改动记录：全球半岛版（导入 GeoNames TPEN 共识名名单）
-        
-          本次更新（全球半岛版）：在既有要素库基础上，导入从 GeoNames 全球 TPEN 提取的「有中文共识名」半岛名单（133 条）。合入后半岛要素共 1565 条，其中 共识译名 1234 / 音译名 294 / 待补译名 37。
-          合并规则：按英文名与中文名归一化去重；已存在条目命中共识名后升级为「共识译名」；未收录的共识名条目作为新增点要素导入（含 geonameid 与所属国家）。共升级 66 条、新增 67 条。
-          标注说明：每条半岛名称均标注名称性质——共识译名（采用公开通用译名）、音译名（暂无公开共识译名，按原名音译，括号内为原名）、待补译名（暂无中文名）。
-        
-      
-        
-          本次更新（大半岛优先 + 区域匹配 + 国家筛查 + 中文名）：优先收录楚科奇、堪察加、泰梅尔、亚马尔、科拉、拉布拉多等世界级大半岛；取消“点/绿块铺满”的覆盖式展示，改为按框选区域匹配（点要素亦参与，且不被超大范围要素压制）；新增按国家筛查输入框，小半岛难匹配时先锁定国家再匹配；缺失中文名的要素统一做英译中/规则化直译。
-          双数据源架构：新增瓦片模式——配置 TILES_URL 后从矢量瓦片（PMTiles / 静态目录）按视野流式加载，可承载上万~几十万要素；默认仍用内置要素库，但按 rank 重要度分级显隐（低缩放只显示大要素）。配套 features.geojson 导出与 tools/bake_tiles.sh 烘焙管线。
-          要素库扩充（22 → 68 项）：半岛 17 / 海峡 14 / 海湾 14 / 峡湾 5 / 岛屿 18，覆盖全球主要地理要素；图例新增各类型数量显示。
-          取消运行期几何重算：原先每次缩放/平移结束都用 Turf 对全部要素重新简化并整包 setData；现改为启动时一次性预生成 5 级 LOD 几何，并按级别建独立图层。
-          缩放切换交给地图引擎：用每级的 minzoom/maxzoom 自动显隐，缩放/平移不再触发任何数据重建（moveend 仅刷新统计）。
-          高亮改用 feature-state：删除独立 highlight 数据源与整包 setData，改为 setFeatureState 状态着色，零数据重传。
-          缓解颜色重叠：填充不透明度下调，并在彩色边线下加一层深色描边（casing），相邻/嵌套要素边界更清晰。
-          标签防挤占：引入 symbol-sort-key（按面积定优先级）+ text-variable-anchor + text-padding，密集区自动择优显示。
-          可观测：启动时记录 LOD 预生成耗时，显示在地图下方注释。
-        
-      
-      
-        说明：本页为功能原型。要素轮廓为示意几何（依据公开地名的中心坐标概化而成，非测绘级精度），用于验证「缩放自适应简化 + 几何识别」链路。真实项目应接入 Natural Earth / OpenStreetMap 的权威矢量数据。地图涉国界处应以官方标准地图为准。
-      
-    
-  
-
-
-
-
-
+<script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/@turf/turf@7/turf.min.js"></script>
+<script>
 /* ============================================================
    0. 要素数据源配置（双模式架构）
    默认 TILES_URL 为空 → 内置要素库模式（适合数百~数千要素）。
@@ -1866,7 +1866,15 @@ var LOD_LEVELS = [
   {level:'L4', minZoom:9, maxZoom:99, tol:0.0}
 ];
 function lodForZoom(z){
-  for (var i=0;i= 4) ? c : ring;
+  for (var i=0;i<LOD_LEVELS.length;i++){ if (z < LOD_LEVELS[i].maxZoom) return i; }
+  return LOD_LEVELS.length-1;
+}
+function simplifyRing(ring, tol){
+  if (tol <= 0) return ring;
+  try{
+    var f = turf.simplify(turf.polygon([ring]), {tolerance:tol, highQuality:false, mutate:false});
+    var c = f.geometry.coordinates[0];
+    return (c && c.length >= 4) ? c : ring;
   }catch(e){ return ring; }
 }
 function buildFeatureCollection(levelIdx){
@@ -1893,7 +1901,8 @@ function buildAllLOD(){
 }
 function ringBBoxArea(r){
   var x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
-  for (var k=0;kx1)x1=x; if(yy1)y1=y; }
+  for (var k=0;k<r.length;k++){ var x=r[k][0], y=r[k][1];
+    if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y; }
   return Math.max(0,(x1-x0))*Math.max(0,(y1-y0));
 }
 
@@ -1938,7 +1947,66 @@ function initMap(){
     LOD_LEVELS.forEach(function(lv, i){
       var sid = 'feat' + i;
       map.addSource(sid, { type:'geojson', data: LOD_BUILT[i].fc, promoteId:'idx' });
-      map.addLayer({ id:'fill-'+i, type:'fill', source:sid, minzoom:lv.minZoom, maxzoom:lv.maxZoom, filter:['= 0) setFeatState('hv', hoverId, false);
+      map.addLayer({ id:'fill-'+i, type:'fill', source:sid, minzoom:lv.minZoom, maxzoom:lv.maxZoom, filter:['<=',['get','rank'],LOD_RANK_MAX[i]],
+        paint:{
+          'fill-color':['case',
+            ['boolean',['feature-state','hl'],false],'#f0a02c',
+            ['boolean',['feature-state','hv'],false],'#ffd27a',
+            ['get','color']],
+          'fill-opacity':['case',
+            ['boolean',['feature-state','hl'],false],0.34,
+            ['boolean',['feature-state','hv'],false],0.22,
+            0]
+        }});
+      map.addLayer({ id:'case-'+i, type:'line', source:sid, minzoom:lv.minZoom, maxzoom:lv.maxZoom, filter:['<=',['get','rank'],LOD_RANK_MAX[i]],
+        paint:{ 'line-color':'#05080d', 'line-width':2.6, 'line-opacity':['case',['boolean',['feature-state','hl'],false],0.95,['boolean',['feature-state','hv'],false],0.85,0] } });
+      map.addLayer({ id:'line-'+i, type:'line', source:sid, minzoom:lv.minZoom, maxzoom:lv.maxZoom, filter:['<=',['get','rank'],LOD_RANK_MAX[i]],
+        paint:{ 'line-color':['case',['boolean',['feature-state','hl'],false],'#f0a02c',['boolean',['feature-state','hv'],false],'#ffd27a',['get','color']], 'line-width':1.4, 'line-opacity':['case',['boolean',['feature-state','hl'],false],0.95,['boolean',['feature-state','hv'],false],0.85,0] } });
+      map.addLayer({ id:'pt-'+i, type:'circle', source:sid, minzoom:lv.minZoom, maxzoom:lv.maxZoom, filter:['<=',['get','rank'],LOD_RANK_MAX[i]],
+        paint:{ 'circle-radius':['case',['boolean',['feature-state','hl'],false],9,['boolean',['feature-state','hv'],false],7,0],
+          'circle-color':['case',['boolean',['feature-state','hl'],false],'#f0a02c',['boolean',['feature-state','hv'],false],'#ffd27a','#f0a02c'],
+          'circle-stroke-color':'#1c1305', 'circle-stroke-width':2,
+          'circle-opacity':['case',['boolean',['feature-state','hl'],false],0.95,['boolean',['feature-state','hv'],false],0.8,0] } });
+      map.addLayer({ id:'lab-'+i, type:'symbol', source:sid, minzoom:Math.max(lv.minZoom,4.2), maxzoom:lv.maxZoom, filter:['<=',['get','rank'],LOD_RANK_MAX[i]],
+        layout:{ 'text-field':'', 'text-size':11,
+          'text-font':['Noto Sans Regular','Open Sans Regular'],
+          'text-variable-anchor':['center','top','bottom','left','right'],
+          'text-padding':6, 'text-max-width':8,
+          'symbol-sort-key':['get','sortkey'],
+          'text-allow-overlap':false, 'text-ignore-placement':false },
+        paint:{ 'text-color':'#e6edf6', 'text-halo-color':'#0a0e14', 'text-halo-width':1.4 } });
+    });
+
+
+    } else {
+      setupTileLayers(function(err){
+        if (err){
+          var mn0 = document.getElementById('mapnote');
+          if (mn0) mn0.textContent = '瓦片数据源初始化失败：' + (err.message||err) + '。请检查 TILES_URL 配置，或清空后回退内置要素库模式。';
+        }
+      });
+    }
+
+    /* ③ 框选矩形：瞬时单要素，仅拖动中 setData，开销可忽略 */
+    map.addSource('hlarea', {type:'geojson', data:emptyFC});
+    map.addLayer({ id:'hlarea-fill', type:'fill', source:'hlarea', paint:{ 'fill-color':'#f0a02c', 'fill-opacity':0 } });
+    map.addLayer({ id:'hlarea-line', type:'line', source:'hlarea', paint:{ 'line-color':'#ffb733', 'line-width':3, 'line-opacity':0 } });
+    map.addLayer({ id:'hlarea-dot', type:'circle', source:'hlarea', paint:{ 'circle-color':'#f0a02c', 'circle-radius':13, 'circle-opacity':0, 'circle-stroke-color':'#ffb733', 'circle-stroke-width':3, 'circle-stroke-opacity':0 } });
+    map.addSource('sel', {type:'geojson', data:emptyFC});
+    map.addLayer({ id:'sel-line', type:'line', source:'sel',
+      paint:{ 'line-color':'#ff5c6c', 'line-width':2, 'line-dasharray':[2,1.4] } });
+
+    refreshLodReadout();
+    map.on('zoomend', refreshLodReadout);
+    map.on('moveend', refreshLodReadout);
+
+    /* ④ 悬停/点击：queryRenderedFeatures + feature-state，无需额外数据源 */
+    map.on('mousemove', function(e){
+      if (drawMode) return;
+      var fs = map.queryRenderedFeatures(e.point, { layers: fillLayerIds() });
+      var nid = fs.length ? fs[0].id : -1;
+      if (nid !== hoverId){
+        if (hoverId >= 0) setFeatState('hv', hoverId, false);
         hoverId = nid;
         if (hoverId >= 0){ setFeatState('hv', hoverId, true); map.getCanvas().style.cursor='pointer'; }
         else map.getCanvas().style.cursor='';
@@ -1953,16 +2021,16 @@ function initMap(){
       var localName = displayLocal(FEATURES[p.fid]);
       new maplibregl.Popup({closeButton:true, offset:8})
         .setLngLat(e.lngLat)
-        .setHTML(''+p.name+''+
-          (localName ? ''+localName+'' : '')+
-          ''+TYPE_META[p.type].zh+' · '+(p.en||'')+''+(p.desc || (FEATURES[p.fid] ? FEATURES[p.fid].desc : '') || '')+'')
+        .setHTML('<div style="font-weight:800;font-size:14px">'+p.name+'</div>'+
+          (localName ? '<div style="color:#f0a02c;font-size:12px;font-weight:700;margin:2px 0">'+localName+'</div>' : '')+
+          '<div style="color:#8b9bb0;font-size:11px;margin:2px 0 6px">'+TYPE_META[p.type].zh+' · '+(p.en||'')+'</div><div style="font-size:12px;line-height:1.6;max-width:230px">'+(p.desc || (FEATURES[p.fid] ? FEATURES[p.fid].desc : '') || '')+'</div>')
         .addTo(map);
     });
 
     var mn = document.getElementById('mapnote');
     if (mn){
-      if (TILE_MODE){ mn.innerHTML = '底图为矢量瓦片（OpenFreeMap / MapLibre GL）。要素来自矢量瓦片数据源（' + TILES_URL + '）：分级简化在烘焙期完成，随视野按需加载，可承载上万要素。'; }
-      else { mn.innerHTML = '底图为矢量瓦片（OpenFreeMap / MapLibre GL）。要素轮廓预生成 5 级 LOD 并按重要度分级显隐：缩放按级别切换、平移不再重算；启动预生成耗时 ' + (typeof buildMs === 'number' ? buildMs.toFixed(1) : '—') + ' ms。'; }
+      if (TILE_MODE){ mn.innerHTML = '底图为矢量瓦片（OpenFreeMap / MapLibre GL）。要素来自<b>矢量瓦片数据源</b>（' + TILES_URL + '）：分级简化在烘焙期完成，随视野按需加载，可承载上万要素。'; }
+      else { mn.innerHTML = '底图为矢量瓦片（OpenFreeMap / MapLibre GL）。要素轮廓<b>预生成 5 级 LOD</b> 并按重要度分级显隐：缩放按级别切换、平移不再重算；启动预生成耗时 <b>' + (typeof buildMs === 'number' ? buildMs.toFixed(1) : '—') + ' ms</b>。'; }
     }
 
         setupDraw();
@@ -1997,7 +2065,22 @@ function fillLayerIds(){
 }
 function hitLayerIds(){
   var a = [];
-  for (var i=0;i= 0){ hlId = id; setFeatState('hl', id, true); }
+  for (var i=0;i<LOD_LEVELS.length;i++) a.push('fill-'+i);
+  return a;
+}
+function setFeatState(name, id, on){
+  var st = {}; st[name] = on;
+  if (TILE_MODE){
+    try{ map.setFeatureState({source:'featiles', sourceLayer:TILE_LAYER, id:id}, st); }catch(e){}
+    return;
+  }
+  for (var i=0;i<LOD_LEVELS.length;i++){
+    try{ map.setFeatureState({source:'feat'+i, id:id}, st); }catch(e){}
+  }
+}
+function setHighlight(id){
+  clearHighlight();
+  if (id >= 0){ hlId = id; setFeatState('hl', id, true); }
 }
 function clearHighlight(){
   if (hlId >= 0){ setFeatState('hl', hlId, false); hlId = -1; }
@@ -2153,8 +2236,51 @@ function setupDraw(){
 function rectFC(p1, p2){
   if (!p1 || !p2) return emptyFC;
   var a = map.unproject(p1), b = map.unproject(p2);
-  if (Math.abs(a.lng-b.lng) = 3.0) return { label:'狭长水道型', guess:['strait','fjord'] };
-  if (m.compactness >= 0.55 && m.elongation  0.001) ? (Math.max(wKm,hKm)/Math.min(wKm,hKm)) : 1;
+  if (Math.abs(a.lng-b.lng) < 1e-4 || Math.abs(a.lat-b.lat) < 1e-4) return emptyFC;
+  var ring = [[a.lng,a.lat],[b.lng,a.lat],[b.lng,b.lat],[a.lng,b.lat],[a.lng,a.lat]];
+  return {type:'FeatureCollection', features:[{type:'Feature', properties:{}, geometry:{type:'Polygon', coordinates:[ring]}}]};
+}
+
+function setDrawMode(on){
+  drawMode = on;
+  var b = document.getElementById('drawBtn');
+  b.classList.toggle('on', on);
+  b.textContent = on ? '✏️ 框选中…（拖动或 Esc 取消）' : '✏️ 框选识别';
+  var canvas = map.getCanvas();
+  canvas.style.cursor = on ? 'crosshair' : '';
+  canvas.style.touchAction = on ? 'none' : '';
+  if (on){
+    map.dragPan.disable();
+    if (map.touchZoomRotate) map.touchZoomRotate.disable();
+  } else {
+    map.dragPan.enable();
+    if (map.touchZoomRotate) map.touchZoomRotate.enable();
+  }
+}
+
+/* ============================================================
+   5. 识别引擎：先判型（几何形状），再定名（空间匹配）
+   ============================================================ */
+function shapeJudge(m){
+  if (m.elongation >= 3.0) return { label:'狭长水道型', guess:['strait','fjord'] };
+  if (m.compactness >= 0.55 && m.elongation < 1.8) return { label:'团块紧凑型', guess:['island','peninsula'] };
+  if (m.compactness < 0.35) return { label:'不规则凹入型', guess:['gulf','peninsula'] };
+  return { label:'过渡型', guess:['peninsula','gulf'] };
+}
+
+function identify(drawn){
+  lastDrawn = drawn;
+  if (TILE_MODE) return identifyViaTiles(drawn);
+  var dArea = turf.area(drawn);
+  if (!dArea || dArea <= 0) return;
+  var dRing = drawn.geometry.coordinates[0];
+  var dLine = turf.lineString(dRing);
+  var perim = turf.length(dLine, {units:'meters'});
+  var bbox = turf.bbox(drawn);
+  var cx = (bbox[0]+bbox[2])/2, cy = (bbox[1]+bbox[3])/2;
+  var wKm = turf.distance([bbox[0],cy],[bbox[2],cy],{units:'kilometers'});
+  var hKm = turf.distance([cx,bbox[1]],[cx,bbox[3]],{units:'kilometers'});
+  var elong = (Math.min(wKm,hKm) > 0.001) ? (Math.max(wKm,hKm)/Math.min(wKm,hKm)) : 1;
   var comp = perim > 0 ? (4*Math.PI*dArea/(perim*perim)) : 0;
 
   /* ---- 匹配算法（面积型 + 点型统一参与，按“谁更贴合框选”择优）----
@@ -2232,7 +2358,14 @@ function rectFC(p1, p2){
   document.getElementById('mElong').textContent = elong.toFixed(2) + ' : 1';
   document.getElementById('mComp').textContent = comp.toFixed(2);
 
-  if (!best || best.iou  0.001){
+  if (!best || best.iou <= 0.001){
+    showNoMatch(metrics, judge);
+  } else {
+    showMatch(best, second, metrics, judge, scored, drawn);
+  }
+
+  // 高亮最佳匹配
+  if (best && best.iou > 0.001){
     setHighlight(best.i);
   } else {
     clearHighlight();
@@ -2243,7 +2376,14 @@ function rectFC(p1, p2){
    按 fid 去重（同一要素可能跨瓦片重复出现），再与框选多边形求 IoU 定名。 */
 function identifyViaTiles(drawn){
   var dArea = turf.area(drawn);
-  if (!dArea || dArea  0.001) ? (Math.max(wKm,hKm)/Math.min(wKm,hKm)) : 1;
+  if (!dArea || dArea <= 0) return;
+  var dRing = drawn.geometry.coordinates[0];
+  var perim = turf.length(turf.lineString(dRing), {units:'meters'});
+  var bbox = turf.bbox(drawn);
+  var cx = (bbox[0]+bbox[2])/2, cy = (bbox[1]+bbox[3])/2;
+  var wKm = turf.distance([bbox[0],cy],[bbox[2],cy],{units:'kilometers'});
+  var hKm = turf.distance([cx,bbox[1]],[cx,bbox[3]],{units:'kilometers'});
+  var elong = (Math.min(wKm,hKm) > 0.001) ? (Math.max(wKm,hKm)/Math.min(wKm,hKm)) : 1;
   var comp = perim > 0 ? (4*Math.PI*dArea/(perim*perim)) : 0;
 
   var p1 = map.project([bbox[0], bbox[1]]);
@@ -2276,17 +2416,19 @@ function identifyViaTiles(drawn){
   document.getElementById('mElong').textContent = elong.toFixed(2) + ' : 1';
   document.getElementById('mComp').textContent = comp.toFixed(2);
 
-  if (!best || best.iou  0.001) setHighlight(best.i); else clearHighlight();
+  if (!best || best.iou <= 0.001){ showNoMatch(metrics, judge); }
+  else { showMatch(best, second, metrics, judge, scored, drawn); }
+  if (best && best.iou > 0.001) setHighlight(best.i); else clearHighlight();
 }
 
 function showNoMatch(m, judge){
   var el = document.getElementById('result');
   el.classList.remove('empty');
   el.innerHTML =
-    '几何判型 · '+judge.label+''+
-    '未匹配到已收录要素'+
-    '截取区域与当前要素库（'+FEATURES.length+' 项）无显著重叠。形状分析更接近：'+
-      judge.guess.map(function(t){return TYPE_META[t].zh;}).join(' / ')+'。可放大后重新框选，或在下方输入半岛所属国家做筛查。';
+    '<div class="r-type" style="color:var(--sub)">几何判型 · '+judge.label+'</div>'+
+    '<div class="r-name" style="font-size:18px">未匹配到已收录要素</div>'+
+    '<div class="r-desc">截取区域与当前要素库（'+FEATURES.length+' 项）无显著重叠。形状分析更接近：'+
+      judge.guess.map(function(t){return TYPE_META[t].zh;}).join(' / ')+'。可放大后重新框选，或在下方输入半岛所属国家做筛查。</div>';
   clearHighlight();
   clearArea();
 }
@@ -2310,7 +2452,7 @@ function childrenHtml(drawn, bestIdx){
   if (!kids.length) return '';
   var shown = kids.slice(0, 10).join('、');
   if (kids.length > 10) shown += ' 等 ' + kids.length + ' 个';
-  return '截取范围内含 '+kids.length+' 个其它要素：'+shown+'';
+  return '<div class="tagrow" style="margin-top:8px"><span class="tag" style="border-color:var(--accent);color:var(--accent)">截取范围内含 '+kids.length+' 个其它要素：'+shown+'</span></div>';
 }
 function showMatch(best, second, m, judge, scored, drawn){
   var f = FEATURES[best.i], meta = TYPE_META[f.type];
@@ -2321,20 +2463,20 @@ function showMatch(best, second, m, judge, scored, drawn){
   var el = document.getElementById('result');
   el.classList.remove('empty');
   el.innerHTML =
-    ''+meta.zh+' · '+meta.en+''+
-    ''+f.name+''+
-    (localName ? ''+localName+'' : '')+
-    ''+f.en+''+srcHintHtml(f)+
-    ''+
-      '空间匹配度 IoU'+conf+'%'+
-    ''+
-      '覆盖要素 '+(Math.round(best.cover*100))+'%'+
-      '占截取 '+(Math.round(best.share*100))+'%'+
-      '形状判型 '+judge.label+(agree?' ✓ 一致':' ✗ 偏差')+''+
-      (margin与次优接近，建议细化':'')+
-    ''+
-    ''+(f.desc||(f.country?('所属国家：'+f.country):'—'))+''+childrenHtml(drawn, best.i)+
-    '📚 在要素库中定位';
+    '<div class="r-type" style="color:'+meta.color+'">'+meta.zh+' · '+meta.en+'</div>'+
+    '<div class="r-name">'+f.name+'</div>'+
+    (localName ? '<div class="r-local">'+localName+'</div>' : '')+
+    '<div class="r-en">'+f.en+'</div>'+srcHintHtml(f)+
+    '<div class="conf"><div class="bar"><i style="width:'+conf+'%"></i></div>'+
+      '<div class="lbl"><span>空间匹配度 IoU</span><span>'+conf+'%</span></div></div>'+
+    '<div class="tagrow">'+
+      '<span class="tag">覆盖要素 '+(Math.round(best.cover*100))+'%</span>'+
+      '<span class="tag">占截取 '+(Math.round(best.share*100))+'%</span>'+
+      '<span class="tag">形状判型 '+judge.label+(agree?' ✓ 一致':' ✗ 偏差')+'</span>'+
+      (margin<3?'<span class="tag" style="color:var(--bad)">与次优接近，建议细化</span>':'')+
+    '</div>'+
+    '<div class="r-desc">'+(f.desc||(f.country?('所属国家：'+f.country):'—'))+'</div>'+childrenHtml(drawn, best.i)+
+    '<div style="margin-top:10px"><button class="jumpbtn" type="button">📚 在要素库中定位</button></div>';
   var _jb = el.querySelector('.jumpbtn');
   if (_jb) _jb.addEventListener('click', function(){ jumpToCatalogue(best.i); });
   showArea(f);
@@ -2353,7 +2495,7 @@ function renderLegend(){
   var order = ['peninsula','strait','gulf','fjord','island'];
   var html = order.map(function(t){
     var n = FEATURES.filter(function(f){ return f.type === t; }).length;
-    return ''+TYPE_META[t].zh+' '+n+'';
+    return '<span class="lg"><i style="background:'+TYPE_META[t].color+'"></i>'+TYPE_META[t].zh+' <b style="color:var(--txt)">'+n+'</b></span>';
   }).join('');
   document.getElementById('legend').innerHTML = html;
 }
@@ -2366,7 +2508,7 @@ function buildCatBar(){
   bar.innerHTML = order.map(function(t){
     var n = (t === 'all') ? FEATURES.length : FEATURES.filter(function(f){ return f.type === t; }).length;
     var label = (t === 'all') ? '全部' : TYPE_META[t].zh;
-    return ''+label+' '+n+'';
+    return '<button data-cat="'+t+'"'+(t === activeCat ? ' class="on"' : '')+'>'+label+' '+n+'</button>';
   }).join('');
   Array.prototype.forEach.call(bar.querySelectorAll('button'), function(b){
     b.addEventListener('click', function(){
@@ -2389,14 +2531,14 @@ function srcMeta(f){
 function srcTag(f){
   var sm = srcMeta(f);
   if (!sm) return '';
-  return ' ' + sm.label + '';
+  return ' <span class="tp src-' + sm.cls + '">' + sm.label + '</span>';
 }
 function srcHintHtml(f){
   var sm = srcMeta(f);
   if (!sm) return '';
-  if (sm.cls === 'tl') return '音译名 · 暂无公开共识译名，括号内为原名';
-  if (sm.cls === 'un') return '待补共识译名';
-  return '共识译名 · 采用公开通用译名';
+  if (sm.cls === 'tl') return '<div class="r-src tl">音译名 · 暂无公开共识译名，括号内为原名</div>';
+  if (sm.cls === 'un') return '<div class="r-src un">待补共识译名</div>';
+  return '<div class="r-src cs">共识译名 · 采用公开通用译名</div>';
 }
 function featureGeometry(f){
   if (!f) return null;
@@ -2452,9 +2594,17 @@ function renderCatalogue(){
     if (activeCat !== 'all' && f.type !== activeCat) return;   /* 分类内检索：只在所选要素库中搜寻 */
     if (q){
       var hay = ((f.name||'') + ' ' + (f.en||'') + ' ' + (displayLocal(f)||'')).toLowerCase();
-      if (hay.indexOf(q) '+f.name+''+
-           (localName ? ' '+localName+'' : '') + srcTag(f) + ''+
-           ''+TYPE_META[f.type].zh+'';
+      if (hay.indexOf(q) < 0) return;
+    }
+    rows.push(i);
+  });
+  body.innerHTML = rows.map(function(i){
+    var f = FEATURES[i];
+    var c = TYPE_META[f.type].color;
+    var localName = displayLocal(f);
+    return '<tr data-i="'+i+'"><td><span class="dot" style="background:'+c+'"></span><span class="nm">'+f.name+'</span>'+
+           (localName ? ' <span class="tp">'+localName+'</span>' : '') + srcTag(f) + '</td>'+
+           '<td class="tp">'+TYPE_META[f.type].zh+'</td></tr>';
   }).join('');
   Array.prototype.forEach.call(body.querySelectorAll('tr'), function(tr){
     tr.addEventListener('click', function(){
@@ -2533,13 +2683,36 @@ function _normNature(v){
 }
 function _parseCSV(text){
   var rows=[], row=[], cur='', q=false;
-  for (var i=0;i=0) return k; } return -1; }
+  for (var i=0;i<text.length;i++){
+    var ch=text[i];
+    if (q){
+      if (ch==='"'){ if (text[i+1]==='"'){ cur+='"'; i++; } else q=false; }
+      else cur+=ch;
+    } else {
+      if (ch==='"') q=true;
+      else if (ch===','){ row.push(cur); cur=''; }
+      else if (ch==='\n'){ row.push(cur); rows.push(row); row=[]; cur=''; }
+      else if (ch==='\r'){}
+      else cur+=ch;
+    }
+  }
+  if (cur!=='' || row.length){ row.push(cur); rows.push(row); }
+  return rows;
+}
+function _rowsToFeatures(text){
+  text = text.replace(/^\ufeff/, '');
+  var rows = _parseCSV(text).filter(function(r){ return r.some(function(c){ return c.trim()!==''; }); });
+  if (!rows.length) return [];
+  var head = rows[0].map(function(x){ return x.trim(); });
+  function col(){ var a=[].slice.call(arguments); for (var i=0;i<a.length;i++){ var k=head.indexOf(a[i]); if (k>=0) return k; } return -1; }
   var iCN=col('中文名','名称'), iNAT=col('名称性质','nature'),
       iEN=col('原名/英文','name_en','英文名','asciiname','原名','en'),
       iCTY=col('国家','country'), iLON=col('经度','lon','longitude'),
       iLAT=col('纬度','lat','latitude'), iGID=col('geonameid','gid');
   var out=[];
-  for (var r=1;r=cells.length) return ''; return (cells[i]||'').trim(); }
+  for (var r=1;r<rows.length;r++){
+    var cells=rows[r];
+    function g(i){ if (i<0||i>=cells.length) return ''; return (cells[i]||'').trim(); }
     var lon=parseFloat(g(iLON)), lat=parseFloat(g(iLAT));
     if (!isFinite(lon)||!isFinite(lat)) continue;
     out.push({ cn:g(iCN), nature:_normNature(g(iNAT)), en:g(iEN), country:g(iCTY), lon:lon, lat:lat, gid:g(iGID) });
@@ -2605,7 +2778,66 @@ function _importText(text, name){
   var recs;
   try{
     var t=text.replace(/^\ufeff/,'');
-    if (/\.csv$/i.test(name) || (t.indexOf('{') 80){
+    if (/\.csv$/i.test(name) || (t.indexOf('{')<0 && t.indexOf('[')<0)) recs=_rowsToFeatures(t);
+    else { recs=_geoToRecords(JSON.parse(t)); if (!recs.length) recs=_rowsToFeatures(t); }
+  }catch(e){ recs=_rowsToFeatures(text); }
+  return recs||[];
+}
+function _doImportFiles(fileList){
+  var files=[].slice.call(fileList||[]);
+  if (!files.length) return;
+  var pending=files.length, allRecs=[], names=[];
+  files.forEach(function(file){
+    names.push(file.name);
+    var fr=new FileReader();
+    fr.onload=function(){
+      allRecs=allRecs.concat(_importText(String(fr.result||''), file.name));
+      if (--pending===0){ var res=_recordsToFeatures(allRecs); _afterImport(res.added, res.dup, names.join(', ')); }
+    };
+    fr.onerror=function(){ if (--pending===0){ var res=_recordsToFeatures(allRecs); _afterImport(res.added, res.dup, names.join(', ')); } };
+    fr.readAsText(file);
+  });
+}
+var _importBtn=document.getElementById('importBtn');
+if (_importBtn) _importBtn.addEventListener('click', function(){
+  if (IMPORT_URL){
+    var m=document.getElementById('importMsg'); if (m) m.textContent='⏳ 正在从 '+IMPORT_URL+' 导入…';
+    fetch(IMPORT_URL).then(function(r){ return r.text(); }).then(function(t){
+      var recs=_importText(t, IMPORT_URL);
+      var res=_recordsToFeatures(recs); _afterImport(res.added, res.dup, IMPORT_URL);
+    }).catch(function(e){ var m=document.getElementById('importMsg'); if (m) m.textContent='❌ 导入失败：'+(e.message||e); });
+  } else {
+    document.getElementById('importFile').click();
+  }
+});
+var _importFile=document.getElementById('importFile');
+if (_importFile) _importFile.addEventListener('change', function(e){
+  _doImportFiles(e.target.files);
+  e.target.value='';
+});
+(function(){
+  var host=document.getElementById('map')||document.body;
+  ['dragover','dragenter'].forEach(function(t){ host.addEventListener(t, function(e){ e.preventDefault(); }); });
+  host.addEventListener('drop', function(e){
+    e.preventDefault();
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) _doImportFiles(e.dataTransfer.files);
+  });
+})();
+
+var started = false;
+function safeStart(){
+  if (started) return; started = true;
+  try{ initMap(); }
+  catch(e){
+    document.getElementById('mapnote').textContent = '地图引擎初始化失败：'+(e.message||e)+'（要素识别需联网加载地图库）。';
+  }
+}
+if (typeof maplibregl === 'undefined' || typeof turf === 'undefined'){
+  var tries = 0;
+  var t = setInterval(function(){
+    tries++;
+    if (typeof maplibregl !== 'undefined' && typeof turf !== 'undefined'){ clearInterval(t); safeStart(); }
+    else if (tries > 80){
       clearInterval(t);
       document.getElementById('mapnote').textContent = '地图库或几何库加载失败，请检查网络后刷新。';
     }
@@ -2654,12 +2886,12 @@ function listCountry(){
     return;
   }
   hit.sort(function(a,b){ return (a.rank||5)-(b.rank||5); });
-  list.innerHTML = '' + hit.map(function(f){
+  list.innerHTML = '<table><tbody>' + hit.map(function(f){
     var i = FEATURES.indexOf(f);
     var localName = displayLocal(f);
-    return '' +
-           f.name + (localName ? ' '+localName+'' : '') + srcTag(f) + '' + f.country + '';
-  }).join('') + '';
+    return '<tr data-i="' + i + '"><td><span class="dot" style="background:' + TYPE_META[f.type].color + '"></span>' +
+           f.name + (localName ? ' <span class="tp">'+localName+'</span>' : '') + srcTag(f) + '</td><td class="tp">' + f.country + '</td></tr>';
+  }).join('') + '</tbody></table>';
   list.classList.add('on');
   msg.textContent = '已锁定国家：' + c + '，共 ' + hit.length + ' 项。' + (lastDrawn ? '已在截取区域内重新匹配。' : '点击列表项可定位。');
   Array.prototype.forEach.call(list.querySelectorAll('tr'), function(tr){
@@ -2682,6 +2914,6 @@ document.getElementById('countryReset').addEventListener('click', function(){
   if (lastDrawn) identify(lastDrawn);
 });
 
-
-
-
+</script>
+</body>
+</html>
